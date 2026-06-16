@@ -3,7 +3,7 @@
 # By YOUR NAME HERE
 #===========================================================
 
-from flask import Flask, request, session, render_template, flash, redirect, send_file, make_response
+from flask import Flask, request, session, render_template, flash, redirect, send_file, make_response, abort
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 from os import getenv
@@ -57,7 +57,17 @@ def show_help():
 
     return render_template("pages/help.jinja")
 
-
+@app.route("/add", methods=['GET',"POST"])
+def add_creature():
+    if request.method == 'POST':
+        try:
+            name = request.form['name']
+            species = request.form['species']
+        
+            return render_template("pages/test.jinja",name=name,species=species)
+        except:
+            abort(400)
+    return render_template("pages/add.jinja")
 #===========================================================
 # Configure the app
 #===========================================================
@@ -69,4 +79,3 @@ init_date_filters(app)
 init_error_handlers(app)
 init_database()
 register_commands(app)
-
