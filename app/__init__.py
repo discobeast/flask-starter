@@ -25,37 +25,48 @@ app = Flask(__name__)
 #-----------------------------------------------------------
 @app.get("/")
 def show_welcome():
-    return render_template("pages/welcome.jinja")
-
-
-#-----------------------------------------------------------
-# Creature list page - Show all the creatures
-#-----------------------------------------------------------
-@app.get("/creatures")
-def show_all_creatures():
     with connect_db() as db:
         sql = """
-            SELECT id, species, name
-            FROM creatures
+        SELECT * FROM TASKS
         """
-        params = ()
-        creatures = db.execute(sql, params).fetchall()
+        data = db.execute(sql).fetchall()
+        data_sorted = sorted(data, key = lambda x: x['priority'], reverse=True)
+        return render_template("pages/list.jinja",tasks=data_sorted)
 
-        return render_template("pages/creature_list.jinja", creatures=creatures)
+@app.route("/tasks/<int:id>", methods=['GET','POST','DELETE'])
+def manage_tasks(id):
+    with connect_db() as db:
+        if request.method == 'GET':
+            sql = "SELECT * FROM TASKS WHERE id = ?"
+            params = (id,)
+            data = db.execute(sql,params).fetchone()
+        elif request.method == 'POST':
+            name = request.form['name']
+            priority = request.form['priority']
+            sql = "UPDATE tasks SET name = ?,priority = ? WHERE id = ?"
+            #INSERT INTO tasks (name,priority) VALUES (?,?) ON CONFLICT (id) DO UPDATE SET name = excluded.name, priority = excluded.priority;
+            params = (name,priority,id)
+            db.execute(sql,params)
+            data = {'name':name,'priority':priority, 'id':id}
+        elif request.method == 'DELETE':
+            sql = "DELETE FROM tasks WHERE id = ?"
+            params = (id,)
+            db.execute(sql,params)
+            return ""
+        return render_template("partials/task.jinja",task=data)
 
+        
 
-#-----------------------------------------------------------
-# Help page - Show some help
-#-----------------------------------------------------------
-@app.get("/help")
-def show_help():
+    
 
-    flash("Flash test message")
-    flash("Flash test message with a longer bit of text")
-    flash("Success test message", "success")
-    flash("Error test message", "error")
-
-    return render_template("pages/help.jinja")
+@app.get("/tasks/<int:id>/edit")
+def edit_task(id):
+    with connect_db() as db:
+        sql = "SELECT * FROM tasks WHERE id = ?"
+        params = (id,)
+        data = db.execute(sql,params).fetchone()
+        return render_template("partials/edit.jinja",task = data)
+        
 
 @app.route("/add", methods=['GET',"POST"])
 def add_creature():
