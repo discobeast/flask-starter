@@ -1,0 +1,15 @@
+{% extends "pages/_base.jinja"%}
+{% block content %}
+    <h2>New goober</h2>
+    <form action="/add", method="post">
+        <label>
+            Name
+            <input type="text" name="name" required>
+        </label>
+        <label>
+            Species
+            <input type="text" name="species" required>
+        </label>
+        <button type="submit">Submit</button>
+    </form>
+{% endblock %}
